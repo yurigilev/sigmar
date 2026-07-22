@@ -2,206 +2,148 @@
 
 ```puml
 @startuml
-left to right direction
-title Диаграмма развертывания системы Sigmar2042
+title Диаграмма развертывания: Контент + AI-коучинг
 
-node "🖥️ Рабочая станция\n(Windows / macOS)" as WS {
-    artifact "CapCut Desktop" as CapCut
-    artifact "Movie Studio Platinum 13" as MSP
-    artifact "Python 3.11 + venv" as PyEnv
-    artifact "FFmpeg" as FFmpeg
-    artifact "Ollama (локальные LLM)" as Ollama
-    
-    database "Локальное хранилище\n(SSD, ~2TB)" as LocalFS {
-        folder "input/" as In
-        folder "output/" as Out
-        folder "assets/ (intro, outro, covers)" as Assets
-    }
-}
-
-node "🌐 Сервер автоматизации\n(VPS / Home Server, Linux)" as Server {
-    artifact "Pipeline Orchestrator\n(Python + Celery)" as Orch
-    artifact "Redis (очередь задач)" as Redis
-    artifact "PostgreSQL (метаданные)" as PG
-    artifact "Telegram Bot (aiogram)" as TGBot
-    
-    artifact "Агенты:" as Agents {
-        artifact "Transcription Agent" as TA
-        artifact "Editing Agent (MoviePy)" as EA
-        artifact "LLM Agent" as LA
-        artifact "Publishing Agents" as PA
-        artifact "Analytics Agent" as AA
-    }
-}
-
-node "☁️ Облачные сервисы" as Cloud {
-    artifact "OpenAI API\n(резерв для LLM)" as OAI
-    artifact "Google Drive / Yandex Disk\n(бэкап видео)" as CloudFS
-}
-
-cloud "📱 Социальные платформы" as Platforms {
-    artifact "Instagram" as IG
-    artifact "ВКонтакте" as VK
-    artifact "YouTube" as YT
-    artifact "Telegram" as TG
-    artifact "Яндекс Дзен" as DZ
-}
-
-' Связи
-WS --> Server : SSH / Git push\n(деплой кода)
-WS --> CloudFS : Синхронизация видео\n(Resilio / Syncthing)
-
-Server --> OAI : HTTPS (OpenAI API)
-Server --> CloudFS : Бэкап результатов
-
-Server --> IG : HTTPS (Graph API)
-Server --> VK : HTTPS (VK API)
-Server --> YT : HTTPS (YouTube Data API v3)
-Server --> TG : HTTPS (Bot API)
-Server --> DZ : HTTPS (Дзен API)
-
-WS --> IG : Ручная публикация (альтернатива)
-WS --> VK : Ручная публикация
-WS --> YT : Ручная публикация через YT Studio
-WS --> TG : Telegram Desktop
-
-Server --> TGBot : Уведомления о статусе\nи новые заявки
-
-note right of Server
-  **Требования к серверу:**
-  - CPU: 4+ cores
-  - RAM: 16+ GB (для Whisper/LLM)
-  - GPU: опционально (RTX 3060+ для локального Whisper)
-  - Disk: 500+ GB SSD
-end note
-
-note bottom of WS
-  **Локальная работа:**
-  - Творческий монтаж (CapCut, MSP)
-  - Запись видео
-  - Ручной контроль качества
-  - Запуск пайплайнов
-end note
-
-@enduml
-```
-
-```puml
-@startuml
-left to right direction
-title Диаграмма развертывания (прагматичная, без over-engineering)
-
-node "💻 Ноутбук Dell\n(Core i7-10850H, 32GB RAM, NO GPU)\nWindows 10" as Laptop {
-    artifact "CapCut Desktop" as CapCut
-    artifact "Movie Studio Platinum 13" as MSP
-    artifact "Python 3.11 + venv" as PyEnv
-    artifact "FFmpeg" as FFmpeg
+node "💻 Ноутбук Dell\n(i7-10850H, 32GB RAM, NO GPU)" as Laptop {
+    artifact "CapCut / Movie Studio" as Editor
+    artifact "Телефон\n(съемка + загрузка в облако)" as Phone
     
     artifact "Локальные инструменты:" as LocalTools {
-        artifact "Whisper small\n(транскрипция, ночью)" as Whisper
-        artifact "Ollama + Llama 3.2 3B\n(опционально, массовые задачи)" as Ollama
+        artifact "Whisper small\n(ночная транскрипция)" as Whisper
+        artifact "Ollama + Llama 3.2 3B\n(опционально)" as Ollama
     }
     
-    database "SQLite (sigmar.db)\n- контент, метрики, фидбек\n- логи LLM, очередь, кэш" as SQLiteDB
+    database "sigmar_content.db\n(метаданные контента)" as DB_Content
     
     folder "Файловое хранилище" as LocalFS {
-        folder "input/" as In
-        folder "output/" as Out
-        folder "assets/ (intro, outro)" as Assets
+        folder "input/ (исходники)" as In
+        folder "output/ (готовые видео)" as Out
     }
 }
 
-node "🌐 VPS (Linux)\n4 vCPU, 8GB RAM, 100GB SSD\n~$10-20/мес" as VPS {
-    artifact "Pipeline Orchestrator\n(Python, простой скрипт)" as Orch
+node "🌐 VPS (Linux)\n4 vCPU, 16GB RAM, 200GB SSD\n~$20-30/мес" as VPS {
     
-    artifact "LiteLLM Proxy\n(маршрутизатор LLM)" as Router
-    
-    artifact "Агенты (Python):" as Agents {
-        artifact "- Editing Agent (MoviePy)" as EA
-        artifact "- Publishing Agents" as PA
-        artifact "- Analytics Agent" as AA
-        artifact "- Feedback Agent" as FA
-        artifact "- LLM Content Agent" as LA
+    package "Контент-продакшн" {
+        artifact "File Watcher\n(rclone + мониторинг)" as Watcher
+        artifact "Pipeline Orchestrator\n(обработка видео)" as Pipeline
+        artifact "Агенты:\n- Transcription\n- Editing\n- Cover\n- LLM Content\n- Publishing\n- Feedback" as ContentAgents
     }
     
-    artifact "Tailscale Client\n(приватная сеть)" as TS_VPS
+    package "AI-коучинг" {
+        artifact "Telegram Bot\n(aiogram 3.x, polling)" as TGBot
+        artifact "FSM Handler\n(опросник)" as FSM
+        artifact "Payment Handler\n(ЮKassa)" as PayH
+        artifact "Program Generator\n(LLM Agent)" as ProgGen
+        artifact "Client Manager" as CM
+        artifact "Reminder Service\n(cron)" as Rem
+        artifact "Support Handler" as Sup
+    }
+    
+    package "Общие сервисы" {
+        artifact "LiteLLM Proxy\n(:4000)" as Router
+        artifact "Tailscale Client" as TS
+    }
+    
+    database "sigmar_coaches.db\n(клиенты, программы,\nплатежи, чек-ины)" as DB_Coach
 }
 
-cloud "☁️ Облачные LLM (основная сила)" as CloudLLM {
+cloud "☁️ Облачные LLM" as CloudLLM {
     artifact "OpenAI API" as OAI {
-        artifact "- GPT-4o-mini\n($0.15/1M токенов)\n80% задач" as GPT4oMini
-        artifact "- GPT-4o\n($5/1M токенов)\n20% сложных задач" as GPT4o
-        artifact "- Whisper API\n($0.006/мин)\nfallback" as WhisperAPI
+        artifact "GPT-4o-mini\n($0.15/1M ток)" as GPT4oMini
+        artifact "GPT-4o\n($5/1M ток)" as GPT4o
+        artifact "Whisper API\n(fallback)" as WhisperAPI
     }
 }
 
-cloud "📱 Социальные платформы" as Platforms {
+cloud "📱 Внешние сервисы" as External {
+    artifact "Telegram Bot API" as TG_API
+    artifact "ЮKassa API\n(прием платежей)" as YK
+    artifact "Yandex Disk\n(облако для видео)" as Cloud
+}
+
+cloud "📺 Платформы дистрибуции" as Platforms {
     artifact "Instagram" as IG
     artifact "ВКонтакте" as VK
     artifact "YouTube" as YT
-    artifact "Telegram" as TG
-    artifact "Яндекс Дзен" as DZ
+    artifact "Дзен" as DZ
 }
 
 ' Связи
-Laptop --> VPS : Tailscale VPN\n(синхронизация файлов,\nдоступ к LiteLLM)
+Laptop --> VPS : Tailscale VPN
+Laptop --> Cloud : загрузка видео
+Watcher --> Cloud : rclone sync
 
-VPS --> Router : Агенты → :4000
-Router --> OAI : HTTPS\n(основные запросы)
-Router --> Ollama : HTTP\n(опционально, через Tailscale)
+VPS --> Router : все LLM-запросы
+Router --> OAI : HTTPS
 
-VPS --> IG : HTTPS (Graph API)
-VPS --> VK : HTTPS (VK API)
-VPS --> YT : HTTPS (YouTube Data API v3)
-VPS --> TG : HTTPS (Bot API)
-VPS --> DZ : HTTPS (Дзен API)
+VPS --> TG_API : Telegram Bot
+VPS --> YK : платежи
+VPS --> IG : Graph API
+VPS --> VK : VK API
+VPS --> YT : YouTube Data API
+VPS --> DZ : Дзен API
 
-Laptop --> IG : Ручная публикация (альтернатива)
-Laptop --> VK : Ручная публикация
-Laptop --> YT : Ручная публикация через YT Studio
-Laptop --> TG : Telegram Desktop
+TGBot --> TG_API : polling/webhook
+TGBot --> FSM
+TGBot --> PayH
+TGBot --> CM
+TGBot --> Sup
 
-note right of Laptop
-  **Локально на ноутбуке:**
-  - Творческий монтаж (CapCut, MSP)
-  - MoviePy + FFmpeg (конвертация)
-  - Whisper small (транскрипция ночью)
-  - SQLite (все данные в одном файле)
-  - Опционально: Ollama + Llama 3.2 3B
+FSM --> DB_Coach
+PayH --> YK
+PayH --> DB_Coach
+ProgGen --> Router
+ProgGen --> DB_Coach
+CM --> DB_Coach
+CM --> Rem
+Rem --> TGBot : push-уведомления
+
+Pipeline --> ContentAgents
+ContentAgents --> Router
+ContentAgents --> DB_Content
+ContentAgents --> TGBot : уведомления
+
+note right of VPS
+  **VPS (16GB RAM):**
+  - Хватает для всех агентов
+  - Telegram-бот работает 24/7
+  - Cron для напоминаний
+  - LiteLLM как единая точка входа
   
-  **НЕ локально:**
-  - Агенты работают на VPS (24/7)
-  - Основная LLM — облачная
+  **Стоимость:**
+  - VPS: ~$25/мес
+  - OpenAI API: ~$30-80/мес (при 100 клиентах)
+  - ЮKassa: 3.5% от платежей
+  - **Итого: ~$60-110/мес**
 end note
 
-note bottom of VPS
-  **VPS (4 vCPU, 8GB RAM):**
-  - Pipeline Orchestrator
-  - LiteLLM Proxy
-  - Все агенты (Python)
-  - Tailscale Client
+note bottom of Laptop
+  **Локально:**
+  - Съемка и творческий монтаж
+  - Ночная транскрипция (Whisper)
+  - Хранение исходников
   
-  **Стоимость:** ~$10-20/мес
-  
-  **НЕ на VPS:**
-  - Нет PostgreSQL (используем SQLite на ноутбуке)
-  - Нет Redis (очередь в SQLite)
-  - Нет Celery (простой Python-скрипт)
+  **Не локально:**
+  - Все агенты работают на VPS
+  - Основная LLM — облачная
+  - Telegram-бот — на VPS 24/7
 end note
 
 note right of CloudLLM
-  **Облачная LLM — основа:**
-  - GPT-4o-mini: 80% задач (дешево)
-  - GPT-4o: 20% сложных задач (качественно)
-  - Whisper API: fallback для транскрипции
+  **Распределение LLM-запросов:**
   
-  **Стоимость:** ~$1-3/мес
-  при вашем объеме
+  **Контент-продакшн:**
+  - SEO, хештеги → GPT-4o-mini
+  - Статьи для Дзен → GPT-4o
+  - Анализ фидбека → GPT-4o-mini
   
-  **Локальная LLM — опциональна:**
-  - Только если ноутбук включен
-  - Только для массовых задач
-  - Fallback на облако, если недоступна
+  **AI-коучинг:**
+  - Генерация программ → GPT-4o
+  - Корректировка программ → GPT-4o
+  - Ответы на вопросы → GPT-4o-mini
+  - Эскалация → GPT-4o
+  
+  **Средний чек:** ~$0.30-0.80 на клиента/мес
 end note
 
 @enduml

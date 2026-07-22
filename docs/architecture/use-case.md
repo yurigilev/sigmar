@@ -1,176 +1,105 @@
-# Use-case
-
-```puml
 @startuml
 left to right direction
-title Use-Case диаграмма системы контент-продакшна
+title Use-Case: Контент + AI-коучинг
 
-actor "Контент-мейкер\n(Sigmar2042)" as Creator
-actor "Подписчик" as Subscriber
-actor "Клиент" as Client
+actor "Sigmar2042\n(наставник)" as Coach
+actor "Подписчик\n(зритель)" as Viewer
+actor "Клиент\n(платящий)" as Client
 
-rectangle "Система контент-продакшна" {
+rectangle "Система Sigmar2042" {
     
-    package "Производство контента" {
+    package "Контент-продакшн" {
         usecase "Снять серию коротких видео" as UC1
-        usecase "Смонтировать длинное видео" as UC2
-        usecase "Транскрибировать видео" as UC3
-        usecase "Сгенерировать статью для Дзен" as UC4
-        usecase "Подготовить версию для VK" as UC5
-        usecase "Подготовить версию для IG" as UC6
+        usecase "Загрузить видео в облако" as UC2
+        usecase "Автоматическая обработка\n(транскрипция, монтаж, SEO, статья)" as UC3
+        usecase "Получить уведомление о готовности" as UC4
+        usecase "Опубликовать в IG/VK/YT/Дзен" as UC5
+        usecase "Собрать фидбек и выделить боли" as UC6
     }
     
-    package "Дистрибуция" {
-        usecase "Опубликовать в Instagram" as UC7
-        usecase "Опубликовать в VK" as UC8
-        usecase "Опубликовать в YouTube (Long)" as UC9
-        usecase "Опубликовать в YouTube (Shorts)" as UC10
-        usecase "Опубликовать в Telegram" as UC11
-        usecase "Опубликовать в Дзен" as UC12
+    package "AI-коучинг (Telegram-бот)" {
+        usecase "Запустить бота /start" as UC10
+        usecase "Заполнить опросную анкету\n(12 вопросов)" as UC11
+        usecase "Выбрать тариф\n(Старт/Про/VIP)" as UC12
+        usecase "Оплатить подписку" as UC13
+        usecase "Получить персональную программу\n(сгенерирована AI)" as UC14
+        usecase "Получать ежедневные напоминания\nо тренировке" as UC15
+        usecase "Отмечать выполнение тренировки" as UC16
+        usecase "Делать еженедельный чек-ин" as UC17
+        usecase "Получать AI-корректировку программы" as UC18
+        usecase "Задавать вопросы наставнику" as UC19
     }
     
-    package "Аналитика и обратная связь" {
-        usecase "Собрать фидбек из всех соцсетей" as UC13
-        usecase "Выделить боли аудитории" as UC14
-        usecase "Сформировать контент-план" as UC15
-        usecase "Проанализировать метрики" as UC16
-    }
-    
-    package "Монетизация" {
-        usecase "Провести консультацию" as UC17
-        usecase "Управлять закрытым каналом" as UC18
-        usecase "Получить доход от Дзен" as UC19
+    package "Управление (для наставника)" {
+        usecase "Просмотреть список клиентов" as UC30
+        usecase "Проанализировать прогресс клиента" as UC31
+        usecase "Вмешаться в сложный случай\n(эскалация от AI)" as UC32
+        usecase "Получить финансовый отчет" as UC33
     }
 }
 
-Creator --> UC1
-Creator --> UC2
-Creator --> UC11
-Creator --> UC17
-Creator --> UC18
+' Контент-продакшн
+Coach --> UC1
+Coach --> UC2
+Coach --> UC5 : по клику в Telegram
+Viewer --> UC5 : смотрит
+Viewer --> UC6 : оставляет фидбек
+UC2 ..> UC3 : <<trigger>>
+UC3 ..> UC4 : <<notify>>
+UC4 --> UC5
 
-Subscriber --> UC7 : смотрит
-Subscriber --> UC8 : смотрит
-Subscriber --> UC9 : смотрит
-Subscriber --> UC10 : смотрит
-Subscriber --> UC11 : читает
-Subscriber --> UC12 : читает
-Subscriber --> UC13 : оставляет фидбек
+' AI-коучинг
+Viewer --> UC10 : переходит из контента
+UC10 --> UC11
+UC11 --> UC12
+UC12 --> UC13
+UC13 --> UC14
+UC14 --> UC15
+UC15 --> UC16
+UC16 --> UC17
+UC17 --> UC18
 
-Client --> UC17 : заказывает
+Client --> UC10
+Client --> UC16
+Client --> UC17
+Client --> UC19
 
-UC2 ..> UC3 : <<include>>
-UC2 ..> UC5 : <<include>>
-UC2 ..> UC6 : <<include>>
-UC9 ..> UC2 : <<include>>
-UC10 ..> UC1 : <<include>>
-UC12 ..> UC4 : <<include>>
-UC4 ..> UC3 : <<include>>
+' Управление
+Coach --> UC30
+Coach --> UC31
+Coach --> UC32 : когда AI не справляется
+Coach --> UC33
 
-UC13 ..> UC14 : <<include>>
-UC14 ..> UC15 : <<include>>
-UC15 ..> UC1 : <<extend>>
-
-UC7 --> UC16
-UC8 --> UC16
-UC9 --> UC16
-UC10 --> UC16
-UC11 --> UC16
-UC12 --> UC16
-
-UC17 --> UC19 : генерирует отзывы
-UC18 --> UC19 : эксклюзивный контент
-
-@enduml
-```
-
-
-
-```puml
-@startuml
-left to right direction
-title Use-Case диаграмма (упрощенная)
-
-actor "Sigmar2042\n(Контент-мейкер)" as Creator
-actor "Подписчик" as Subscriber
-actor "Клиент" as Client
-
-rectangle "Система контент-продакшна" {
-    
-    package "Производство контента" {
-        usecase "Снять серию коротких видео" as UC1
-        usecase "Смонтировать длинное видео" as UC2
-        usecase "Транскрибировать видео\n(Whisper small локально\nили Whisper API)" as UC3
-        usecase "Сгенерировать статью для Дзен\n(GPT-4o через LiteLLM)" as UC4
-    }
-    
-    package "Дистрибуция" {
-        usecase "Опубликовать в Instagram" as UC7
-        usecase "Опубликовать в VK" as UC8
-        usecase "Опубликовать в YouTube" as UC9
-        usecase "Опубликовать в Telegram" as UC11
-        usecase "Опубликовать в Дзен" as UC12
-    }
-    
-    package "Аналитика и обратная связь" {
-        usecase "Собрать фидбек из соцсетей" as UC13
-        usecase "Выделить боли аудитории\n(GPT-4o-mini через LiteLLM)" as UC14
-        usecase "Сформировать контент-план" as UC15
-    }
-    
-    package "Монетизация" {
-        usecase "Провести консультацию" as UC17
-        usecase "Управлять закрытым каналом" as UC18
-    }
-    
-    package "Хранение данных (SQLite)" {
-        usecase "Сохранить контент, метрики, логи" as UC20
-        usecase "Посчитать расходы на LLM" as UC21
-    }
-}
-
-Creator --> UC1
-Creator --> UC2
-Creator --> UC11
-Creator --> UC17
-Creator --> UC18
-
-Subscriber --> UC7 : смотрит
-Subscriber --> UC8 : смотрит
-Subscriber --> UC9 : смотрит
-Subscriber --> UC11 : читает
-Subscriber --> UC12 : читает
-Subscriber --> UC13 : оставляет фидбек
-
-Client --> UC17 : заказывает
-
-UC2 ..> UC3 : <<include>>
-UC2 ..> UC4 : <<include>>
-UC4 ..> UC3 : <<include>>
-
-UC13 ..> UC14 : <<include>>
-UC14 ..> UC15 : <<extend>>
-
-UC7 --> UC20
-UC8 --> UC20
-UC9 --> UC20
-UC11 --> UC20
-UC12 --> UC20
-UC14 --> UC21 : логирует вызовы LLM
+' Связи между линиями
+UC6 ..> UC11 : <<extend>>\nболи → темы программ
+UC19 ..> UC32 : <<extend>>\nэскалация сложных вопросов
 
 note right of UC3
-  **Whisper small** работает
-  локально на ноутбуке (ночью).
-  **Whisper API** — fallback,
-  если локально медленно.
+  **Автоматическая обработка:**
+  - Whisper small (транскрипция)
+  - FFmpeg (удаление тишины)
+  - MoviePy (конвертация форматов)
+  - GPT-4o-mini (SEO)
+  - GPT-4o (статья для Дзен)
+  - Pillow (заставки)
 end note
 
-note bottom of UC4
-  Все запросы к LLM идут
-  через **LiteLLM Proxy**.
-  Агенты не знают, какая
-  модель реально используется.
+note bottom of UC14
+  **Генерация программы:**
+  GPT-4o на основе анкеты
+  создает JSON с расписанием,
+  упражнениями, дыханием,
+  питанием, восстановлением
 end note
+
+note right of UC18
+  **AI-корректировка:**
+  Каждую неделю LLM анализирует
+  чек-ин клиента и корректирует
+  программу на следующую неделю
+end note
+
+@enduml
 
 @enduml
 ```

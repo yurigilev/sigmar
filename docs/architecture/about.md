@@ -8,215 +8,18 @@
 Мультиплатформенную дистрибуцию (Instagram, VK, YouTube, Telegram, Дзен)
 Сбор и анализ обратной связи
 Монетизацию через консультации и закрытые каналы
-Ниже представлены 5 ключевых UML-диаграмм в формате PlantUM
+
 
 ## Концептуальная модель предметной области (Class Diagram
-
-```puml
-@startuml
-skinparam classAttributeIconSize 0
-skinparam packageStyle rectangle
-title Концептуальная модель предметной области "Sigmar2042 Content System"
-
-package "Контент" {
-    class Content {
-        +id: UUID
-        +title: String
-        +createdAt: DateTime
-        +theme: String
-        +status: ContentStatus
-        +render()
-    }
-    
-    class ShortVideo {
-        +duration: Integer
-        +format: VideoFormat
-        +sourcePlatform: Platform
-        +views: Integer
-        +engagement: Float
-    }
-    
-    class LongVideo {
-        +duration: Integer
-        +chapters: List<Chapter>
-        +seoTitle: String
-        +description: Text
-        +retention: Float
-    }
-    
-    class Article {
-        +text: Markdown
-        +coverImage: Image
-        +zenTags: List<String>
-        +wordCount: Integer
-    }
-    
-    class TelegramPost {
-        +type: PostType
-        +content: Union<Video, Voice, Text, Circle>
-        +isExclusive: Boolean
-    }
-    
-    Content <|-- ShortVideo
-    Content <|-- LongVideo
-    Content <|-- Article
-    Content <|-- TelegramPost
-    
-    LongVideo "1" *-- "many" ShortVideo : собирается из
-}
-
-package "Платформы" {
-    class Platform {
-        <<abstract>>
-        +name: String
-        +api: API
-        +publish(content: Content)
-        +getAnalytics(): Stats
-    }
-    
-    class Instagram
-    class VK
-    class YouTube
-    class Telegram
-    class Dzen
-    
-    Platform <|-- Instagram
-    Platform <|-- VK
-    Platform <|-- YouTube
-    Platform <|-- Telegram
-    Platform <|-- Dzen
-}
-
-package "Аудитория и обратная связь" {
-    class Audience {
-        +totalSize: Integer
-        +segments: List<Segment>
-        +growthRate: Float
-    }
-    
-    class Feedback {
-        +id: UUID
-        +author: User
-        +source: Platform
-        +text: String
-        +sentiment: Float
-        +processedAt: DateTime
-    }
-    
-    class PainPoint {
-        +topic: String
-        +frequency: Integer
-        +quotes: List<String>
-    }
-}
-
-package "Автоматизация (Агенты)" {
-    class Agent {
-        <<abstract>>
-        +name: String
-        +execute()
-    }
-    
-    class TranscriptionAgent {
-        +model: WhisperModel
-        +transcribe(video: Video): Text
-    }
-    
-    class EditingAgent {
-        +pipeline: MoviePyPipeline
-        +convertToHorizontal()
-        +addIntroOutro()
-        +addSubtitles()
-    }
-    
-    class LLMAgent {
-        +model: LLM
-        +generateArticle()
-        +analyzeFeedback()
-        +generateContentPlan()
-    }
-    
-    class FeedbackAgent {
-        +collectFromAll()
-        +extractPainPoints(): List<PainPoint>
-    }
-    
-    class PublishingAgent {
-        +distribute(content: Content, platforms: List<Platform>)
-    }
-    
-    Agent <|-- TranscriptionAgent
-    Agent <|-- EditingAgent
-    Agent <|-- LLMAgent
-    Agent <|-- FeedbackAgent
-    Agent <|-- PublishingAgent
-}
-
-package "Монетизация" {
-    class Monetization {
-        +consultationPrice: Money
-        +paidChannelAccess: Money
-        +zenRevenue: Money
-    }
-    
-    class Consultation {
-        +client: User
-        +topic: String
-        +price: Money
-        +status: Status
-    }
-    
-    class PaidChannel {
-        +subscribers: List<User>
-        +content: List<TelegramPost>
-    }
-}
-
-class User {
-    +id: UUID
-    +username: String
-    +platforms: List<Platform>
-}
-
-Content "1" --> "many" Platform : публикуется на
-Feedback "many" --> "1" User : от
-FeedbackAgent ..> PainPoint : извлекает
-LLMAgent ..> Content : генерирует
-Audience "1" *-- "many" User : состоит из
-Monetization "1" *-- Consultation
-Monetization "1" *-- PaidChannel
-
-enum ContentStatus {
-    DRAFT
-    PROCESSING
-    READY
-    PUBLISHED
-    ANALYZED
-}
-
-enum VideoFormat {
-    VERTICAL_9_16
-    HORIZONTAL_16_9
-    SQUARE_1_1
-}
-
-enum PostType {
-    VIDEO
-    VOICE
-    CIRCLE
-    TEXT
-}
-@enduml
-```
 
 ```puml
 @startuml
 left to right direction
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
-title Концептуальная модель (упрощенная, pragматичная)
+title Концептуальная модель: Контент-продакшн + AI-коучинг
 
-package "Контент" {
+package "Контент-продакшн" {
     class Content {
         +id: UUID
         +title: String
@@ -243,27 +46,104 @@ package "Контент" {
         +wordCount: Integer
     }
     
-    class TelegramPost {
-        +type: PostType
-        +isExclusive: Boolean
-    }
-    
     Content <|-- ShortVideo
     Content <|-- LongVideo
     Content <|-- Article
-    Content <|-- TelegramPost
     
     LongVideo "1" *-- "many" ShortVideo : собирается из
 }
 
-package "Платформы" {
-    class Platform {
-        <<abstract>>
-        +name: String
-        +publish(content: Content)
-        +getAnalytics(): Stats
+package "AI-коучинг (монетизация)" {
+    class Client {
+        +id: Integer
+        +telegramId: Long
+        +username: String
+        +fullName: String
+        +age: Integer
+        +heightCm: Integer
+        +weightKg: Float
+        +healthStatus: HealthStatus
+        +goal: TrainingGoal
+        +martialLevel: MartialLevel
+        +subscriptionTier: Tier
+        +subscriptionExpires: DateTime
+        +status: ClientStatus
     }
     
+    class TrainingProgram {
+        +id: Integer
+        +clientId: Integer
+        +version: Integer
+        +title: String
+        +durationWeeks: Integer
+        +schedule: JSON
+        +breathingExercises: JSON
+        +isActive: Boolean
+    }
+    
+    class Workout {
+        +id: Integer
+        +programId: Integer
+        +dayNumber: Integer
+        +scheduledDate: Date
+        +exercises: JSON
+        +completed: Boolean
+        +difficultyRating: Integer
+    }
+    
+    class CheckIn {
+        +id: Integer
+        +clientId: Integer
+        +weekNumber: Integer
+        +weightKg: Float
+        +energyLevel: Integer
+        +sleepQuality: Integer
+        +mood: Integer
+        +aiAnalysis: Text
+        +aiRecommendations: Text
+    }
+    
+    class Payment {
+        +id: Integer
+        +clientId: Integer
+        +amountRub: Integer
+        +tier: Tier
+        +provider: PaymentProvider
+        +status: PaymentStatus
+        +externalId: String
+    }
+    
+    class Conversation {
+        +id: Integer
+        +clientId: Integer
+        +role: MessageRole
+        +content: Text
+        +createdAt: DateTime
+    }
+    
+    class Reminder {
+        +id: Integer
+        +clientId: Integer
+        +type: ReminderType
+        +scheduledAt: DateTime
+        +sent: Boolean
+    }
+    
+    Client "1" *-- "many" TrainingProgram : имеет
+    Client "1" *-- "many" Payment : оплачивает
+    Client "1" *-- "many" CheckIn : делает
+    Client "1" *-- "many" Conversation : ведет диалог
+    Client "1" *-- "many" Reminder : получает
+    TrainingProgram "1" *-- "many" Workout : включает
+    TrainingProgram "1" --> "many" CheckIn : корректируется по
+}
+
+package "Платформы дистрибуции" {
+    class Platform {
+        <<abstract>>
+        +publish(content)
+        +getAnalytics()
+    }
     class Instagram
     class VK
     class YouTube
@@ -277,7 +157,7 @@ package "Платформы" {
     Platform <|-- Dzen
 }
 
-package "Хранилище (SQLite)" {
+package "Инфраструктура" {
     class SQLiteDB {
         +content: Table
         +publications: Table
@@ -286,49 +166,15 @@ package "Хранилище (SQLite)" {
         +llm_logs: Table
         +tasks: Table
         +cache: Table
-    }
-}
-
-package "Агенты (Python)" {
-    class BaseAgent {
-        +llm: LiteLLMClient
-        +db: SQLiteDB
-        +ask(prompt, model): String
-    }
-    
-    class TranscriptionAgent {
-        +whisper: WhisperModel
-        +transcribe(audio): Text
+        +clients: Table
+        +programs: Table
+        +workouts: Table
+        +checkins: Table
+        +payments: Table
+        +conversations: Table
+        +reminders: Table
     }
     
-    class EditingAgent {
-        +moviepy: MoviePy
-        +convertToHorizontal()
-        +addIntroOutro()
-    }
-    
-    class LLMAgent {
-        +generateArticle()
-        +analyzeFeedback()
-    }
-    
-    class PublishingAgent {
-        +distribute(content, platforms)
-    }
-    
-    class FeedbackAgent {
-        +collectFromAll()
-        +extractPainPoints()
-    }
-    
-    BaseAgent <|-- TranscriptionAgent
-    BaseAgent <|-- EditingAgent
-    BaseAgent <|-- LLMAgent
-    BaseAgent <|-- PublishingAgent
-    BaseAgent <|-- FeedbackAgent
-}
-
-package "LLM-провайдеры" {
     class LiteLLMProxy {
         +route(model): Provider
         +fallback(): Provider
@@ -340,53 +186,112 @@ package "LLM-провайдеры" {
         +whisper_api: Model
     }
     
-    class LocalLLM {
-        <<optional>>
-        +ollama: Ollama
-        +llama32_3b: Model
+    class TelegramBotAPI {
+        +sendMessage()
+        +sendPoll()
+        +processCallback()
     }
     
-    LiteLLMProxy --> OpenAICloud : основная сила
-    LiteLLMProxy --> LocalLLM : опционально
-}
-
-package "Монетизация" {
-    class Consultation {
-        +client: User
-        +price: Money
-        +status: Status
+    class YooKassaAPI {
+        +createPayment()
+        +checkStatus()
     }
     
-    class PaidChannel {
-        +subscribers: List<User>
-    }
+    LiteLLMProxy --> OpenAICloud
 }
 
-class User {
-    +id: UUID
-    +username: String
+package "Агенты (Python)" {
+    class BaseAgent
+    class TranscriptionAgent
+    class EditingAgent
+    class LLMAgent
+    class PublishingAgent
+    class FeedbackAgent
+    class ProgramGenerator
+    class ClientManager
+    class ReminderService
+    class PaymentService
+    
+    BaseAgent <|-- TranscriptionAgent
+    BaseAgent <|-- EditingAgent
+    BaseAgent <|-- LLMAgent
+    BaseAgent <|-- PublishingAgent
+    BaseAgent <|-- FeedbackAgent
+    BaseAgent <|-- ProgramGenerator
+    BaseAgent <|-- ClientManager
+    BaseAgent <|-- ReminderService
+    BaseAgent <|-- PaymentService
 }
 
-Content "1" --> "many" Platform : публикуется на
-SQLiteDB "1" *-- "many" Content : хранит
-SQLiteDB "1" *-- "many" User : хранит
-BaseAgent --> SQLiteDB :读写
+' Связи
+Content "1" --> "many" Platform : публикуется
+SQLiteDB "1" *-- Content : хранит
+SQLiteDB "1" *-- Client : хранит
+
+BaseAgent --> SQLiteDB : данные
 BaseAgent --> LiteLLMProxy : запросы к LLM
-LiteLLMProxy --> OpenAICloud : 80% запросов
-LiteLLMProxy --> LocalLLM : 20% (опционально)
+ProgramGenerator --> LiteLLMProxy : GPT-4o для программ
+PaymentService --> YooKassaAPI : платежи
+ClientManager --> TelegramBotAPI : уведомления клиентам
 
-enum ContentStatus {
+package "Параметры анкеты" {
+enum ContentStatus { 
     DRAFT
     PROCESSING
-    PUBLISHED
-    ANALYZED
+    PUBLISHED 
+    ANALYZED 
 }
-
-enum PostType {
-    VIDEO
-    VOICE
-    CIRCLE
-    TEXT
+enum HealthStatus { 
+    NO_LIMITS
+    INJURIES
+    CHRONIC
+    CARDIO 
+}
+enum TrainingGoal { 
+    STRENGTH
+    ENDURANCE
+    WEIGHT_LOSS
+    MARTIAL
+    HEALTH
+    BREATHING 
+}
+enum MartialLevel { 
+    NONE
+    BEGINNER
+    INTERMEDIATE
+    ADVANCED 
+}
+enum Tier { 
+    START
+    PRO
+    VIP 
+}
+enum ClientStatus { 
+    LEAD 
+    ACTIVE 
+    PAUSED
+    CHURNED 
+}
+enum PaymentStatus { 
+    PENDING
+    PAID
+    FAILED
+    REFUNDED 
+}
+enum PaymentProvider { 
+    YOOKASSA 
+    TELEGRAM 
+}
+enum MessageRole { 
+    USER
+    ASSISTANT
+    SYSTEM 
+}
+enum ReminderType { 
+    WORKOUT
+    CHECKIN
+    PAYMENT 
+}
 }
 @enduml
 ```
